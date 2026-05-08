@@ -298,3 +298,90 @@ async def get_sources(db: AsyncSession) -> List[str]:
     sources = [row[0] for row in res.fetchall()]
     await cache_set(cache_key, sources, ttl=600)
     return sources
+
+
+# ────────────────────────────────────────────────────────────────────
+# 8. Sentiment Summary (Daily & Monthly)
+# ────────────────────────────────────────────────────────────────────
+async def get_sentiment_summary(db: AsyncSession) -> Dict[str, Any]:
+    """
+    Calculate average sentiment score from the `published` timestamp for:
+    1. Current Day (Daily)
+    2. Current Month (Monthly)
+    Sentiment values are stored directly in the DB (range -100..100).
+    """
+    cache_key = "news:sentiment_summary"
+    cached = await cache_get(cache_key)
+    if cached is not None:
+        return cached
+
+    sql = text(f"""
+        SELECT
+            AVG(CASE WHEN published >= CURRENT_DATE THEN sentiment END) AS daily_avg,
+            AVG(CASE WHEN published >= date_trunc('month', CURRENT_DATE) THEN sentiment END) AS monthly_avg
+        FROM {NEWS_SCHEMA}.news
+        WHERE sentiment IS NOT NULL
+    """)
+    res = await db.execute(sql)
+    row = res.mappings().first()
+
+    data = {
+        "daily": float(row["daily_avg"]) if row and row["daily_avg"] is not None else 0.0,
+        "monthly": float(row["monthly_avg"]) if row and row["monthly_avg"] is not None else 0.0,
+    }
+
+    await cache_set(cache_key, data, ttl=300)  # Cache 5 mins
+    return data
+
+
+# ────────────────────────────────────────────────────────────────────
+# 9. Sector Sentiment (Day / Week / Month)
+# ────────────────────────────────────────────────────────────────────
+async def get_sector_sentiment(
+    db: AsyncSession,
+    time_range: str = "month",
+) -> List[Dict[str, Any]]:
+    """
+    Calculate average sentiment per sector from the `published` timestamp within a time window.
+    time_range: day | week | month
+    """
+    normalized = (time_range or "month").strip().lower()
+    if normalized not in {"day", "week", "month"}:
+        normalized = "month"
+
+    range_sql = {
+        "day": "CURRENT_DATE",
+        "week": "date_trunc('week', CURRENT_DATE)",
+        "month": "date_trunc('month', CURRENT_DATE)",
+    }[normalized]
+
+    cache_key = f"news:sector_sentiment:{normalized}"
+    cached = await cache_get(cache_key)
+    if cached is not None:
+        return cached
+
+    sql = text(f"""
+        SELECT
+            COALESCE(icb_name, 'Khác') AS sector,
+            AVG(sentiment) AS sentiment,
+            COUNT(*) AS article_count
+        FROM {NEWS_SCHEMA}.news
+        WHERE sentiment IS NOT NULL
+          AND published >= {range_sql}
+        GROUP BY COALESCE(icb_name, 'Khác')
+        ORDER BY sentiment DESC NULLS LAST, article_count DESC
+    """)
+    res = await db.execute(sql)
+    rows = res.mappings().all()
+
+    data = [
+        {
+            "sector": r["sector"],
+            "sentiment": float(r["sentiment"]) if r["sentiment"] is not None else 0.0,
+            "article_count": int(r["article_count"] or 0),
+        }
+        for r in rows
+    ]
+
+    await cache_set(cache_key, data, ttl=300)
+    return data

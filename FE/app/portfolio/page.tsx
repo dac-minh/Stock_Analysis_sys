@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sigma, RefreshCw, Plus, Trash2, Goal, Info, PieChartIcon, ClipboardList, X, ChevronRight, ChevronLeft, CheckCircle2 } from "lucide-react";
+import { Sigma, RefreshCw, Plus, Trash2, Goal, Info, PieChartIcon, ClipboardList, X, ChevronRight, ChevronLeft, CheckCircle2, MessageCircle } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
@@ -350,11 +350,28 @@ export default function PortfolioPage() {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-4 bg-card border rounded-lg px-4 py-3">
+                <div className="flex flex-col xl:flex-row items-start xl:items-center gap-4 bg-card border rounded-lg px-4 py-3">
+                    <div className="flex-1 min-w-0 rounded-3xl border border-primary/20 bg-primary/5 p-4 text-sm text-slate-900">
+                        <div className="flex items-start gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white shadow-sm">
+                                <MessageCircle className="h-5 w-5" />
+                            </div>
+                            <div className="min-w-0">
+                                <p className="font-semibold">Trợ lý ảo đầu tư</p>
+                                <p className="text-sm text-slate-700 leading-relaxed">
+                                    Nếu bạn chưa biết rõ khẩu vị đầu tư của mình, hãy thực hiện khảo sát nhanh bên cạnh.
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-2">
+                                    Chỉ cần bấm nút <strong>Khảo sát nhanh</strong> để bắt đầu, tôi sẽ gợi ý khẩu vị phù hợp.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Survey button – left */}
                     <div className="flex-shrink-0">
                         <p className="text-xs text-muted-foreground mb-1">Xác định khẩu vị</p>
-                        <Button variant="outline" onClick={openSurvey} className="gap-2 whitespace-nowrap">
+                        <Button id="surveyQuickButton" variant="outline" onClick={openSurvey} className="gap-2 whitespace-nowrap">
                             <ClipboardList className="h-4 w-4" />
                             Khảo sát nhanh
                         </Button>
@@ -467,6 +484,42 @@ export default function PortfolioPage() {
 
                 {snapshot && (
                     <div className="space-y-6 mt-6">
+                        {/* Các số lớn hiển thị ngay sau bộ nhập liệu */}
+                        <div className="grid grid-cols-4 lg:grid-cols-8 gap-2">
+                            <Card title="Cách tính: Tổng (Số lượng x Giá vốn)&#10;Ý nghĩa: Tổng số tiền đang đầu tư" className="p-2">
+                                <CardTitle className="text-[11px] text-muted-foreground flex items-center justify-between mb-1">NAV <div><Info className="h-3 w-3" /></div></CardTitle>
+                                <CardContent className="p-0 text-sm font-bold">{formatMoney(snapshot.nav)}</CardContent>
+                            </Card>
+                            <Card title="Cách tính: Phân vị 5% của chuỗi lợi nhuận lịch sử&#10;Ý nghĩa: Mức lỗ tối đa dự kiến trong 1 ngày (độ tin cậy 95%)" className="p-2">
+                                <CardTitle className="text-[11px] text-muted-foreground flex items-center justify-between mb-1">VaR 95% (1D) <div><Info className="h-3 w-3" /></div></CardTitle>
+                                <CardContent className="p-0 text-sm font-bold">{formatPercent(snapshot.var_95_1d)}</CardContent>
+                            </Card>
+                            <Card title="Cách tính: Trung bình các khoản lỗ vượt ngưỡng VaR&#10;Ý nghĩa: Mức lỗ trung bình nếu thị trường sập mạnh" className="p-2">
+                                <CardTitle className="text-[11px] text-muted-foreground flex items-center justify-between mb-1">CVaR 95% <div><Info className="h-3 w-3" /></div></CardTitle>
+                                <CardContent className="p-0 text-sm font-bold text-red-500">{formatPercent(snapshot.cvar_95)}</CardContent>
+                            </Card>
+                            <Card title="Cách tính: Covariance(Port, VNINDEX) / Variance(VNINDEX)&#10;Ý nghĩa: Độ nhạy so với VNINDEX. >1 là biến động mạnh hơn" className="p-2">
+                                <CardTitle className="text-[11px] text-muted-foreground flex items-center justify-between mb-1">Beta <div><Info className="h-3 w-3" /></div></CardTitle>
+                                <CardContent className="p-0 text-sm font-bold">{snapshot.beta.toFixed(2)}</CardContent>
+                            </Card>
+                            <Card title="Cách tính: (Lợi nhuận - Lãi suất phi rủi ro) / Độ lệch chuẩn&#10;Ý nghĩa: Lợi nhuận siêu ngạch trên 1 đơn vị rủi ro" className="p-2">
+                                <CardTitle className="text-[11px] text-muted-foreground flex items-center justify-between mb-1">Sharpe <div><Info className="h-3 w-3" /></div></CardTitle>
+                                <CardContent className="p-0 text-sm font-bold text-emerald-500">{snapshot.sharpe.toFixed(2)}</CardContent>
+                            </Card>
+                            <Card title="Cách tính: (Đáy - Đỉnh lịch sử) / Đỉnh lịch sử&#10;Ý nghĩa: Mức sụt giảm lớn nhất từ đỉnh lịch sử" className="p-2">
+                                <CardTitle className="text-[11px] text-muted-foreground flex items-center justify-between mb-1">Max DD <div><Info className="h-3 w-3" /></div></CardTitle>
+                                <CardContent className="p-0 text-sm font-bold text-orange-500">{formatPercent(snapshot.max_drawdown)}</CardContent>
+                            </Card>
+                            <Card title="Cách tính: Tổng bình phương các tỷ trọng&#10;Ý nghĩa: Độ tập trung mã. >0.25 là quá tập trung" className="p-2">
+                                <CardTitle className="text-[11px] text-muted-foreground flex items-center justify-between mb-1">HHI <div><Info className="h-3 w-3" /></div></CardTitle>
+                                <CardContent className="p-0 text-sm font-bold">{snapshot.hhi.toFixed(2)}</CardContent>
+                            </Card>
+                            <Card title="Cách tính: Số lượng / (10% x Thanh khoản trung bình 20 ngày)&#10;Ý nghĩa: Số ngày cần để bán sạch danh mục mà không ép giá" className="p-2">
+                                <CardTitle className="text-[11px] text-muted-foreground flex items-center justify-between mb-1">Liquidity <div><Info className="h-3 w-3" /></div></CardTitle>
+                                <CardContent className="p-0 text-sm font-bold">{snapshot.liquidity_days.toFixed(1)} d</CardContent>
+                            </Card>
+                        </div>
+
                         {/* Biểu đồ quan trọng nhất lên đầu */}
                         <Card className="border-emerald-200 shadow-md">
                             <CardHeader className="bg-emerald-50/50 pb-4 border-b">
@@ -526,42 +579,6 @@ export default function PortfolioPage() {
                                 </div>
                             </CardContent>
                         </Card>
-
-                        {/* Các con số KPI */}
-                        <div className="grid grid-cols-4 lg:grid-cols-8 gap-2">
-                            <Card title="Cách tính: Tổng (Số lượng x Giá vốn)&#10;Ý nghĩa: Tổng số tiền đang đầu tư" className="p-2">
-                                <CardTitle className="text-[11px] text-muted-foreground flex items-center justify-between mb-1">NAV <div><Info className="h-3 w-3" /></div></CardTitle>
-                                <CardContent className="p-0 text-sm font-bold">{formatMoney(snapshot.nav)}</CardContent>
-                            </Card>
-                            <Card title="Cách tính: Phân vị 5% của chuỗi lợi nhuận lịch sử&#10;Ý nghĩa: Mức lỗ tối đa dự kiến trong 1 ngày (độ tin cậy 95%)" className="p-2">
-                                <CardTitle className="text-[11px] text-muted-foreground flex items-center justify-between mb-1">VaR 95% (1D) <div><Info className="h-3 w-3" /></div></CardTitle>
-                                <CardContent className="p-0 text-sm font-bold">{formatPercent(snapshot.var_95_1d)}</CardContent>
-                            </Card>
-                            <Card title="Cách tính: Trung bình các khoản lỗ vượt ngưỡng VaR&#10;Ý nghĩa: Mức lỗ trung bình nếu thị trường sập mạnh" className="p-2">
-                                <CardTitle className="text-[11px] text-muted-foreground flex items-center justify-between mb-1">CVaR 95% <div><Info className="h-3 w-3" /></div></CardTitle>
-                                <CardContent className="p-0 text-sm font-bold text-red-500">{formatPercent(snapshot.cvar_95)}</CardContent>
-                            </Card>
-                            <Card title="Cách tính: Covariance(Port, VNINDEX) / Variance(VNINDEX)&#10;Ý nghĩa: Độ nhạy so với VNINDEX. >1 là biến động mạnh hơn" className="p-2">
-                                <CardTitle className="text-[11px] text-muted-foreground flex items-center justify-between mb-1">Beta <div><Info className="h-3 w-3" /></div></CardTitle>
-                                <CardContent className="p-0 text-sm font-bold">{snapshot.beta.toFixed(2)}</CardContent>
-                            </Card>
-                            <Card title="Cách tính: (Lợi nhuận - Lãi suất phi rủi ro) / Độ lệch chuẩn&#10;Ý nghĩa: Lợi nhuận siêu ngạch trên 1 đơn vị rủi ro" className="p-2">
-                                <CardTitle className="text-[11px] text-muted-foreground flex items-center justify-between mb-1">Sharpe <div><Info className="h-3 w-3" /></div></CardTitle>
-                                <CardContent className="p-0 text-sm font-bold text-emerald-500">{snapshot.sharpe.toFixed(2)}</CardContent>
-                            </Card>
-                            <Card title="Cách tính: (Đáy - Đỉnh lịch sử) / Đỉnh lịch sử&#10;Ý nghĩa: Mức sụt giảm lớn nhất từ đỉnh lịch sử" className="p-2">
-                                <CardTitle className="text-[11px] text-muted-foreground flex items-center justify-between mb-1">Max DD <div><Info className="h-3 w-3" /></div></CardTitle>
-                                <CardContent className="p-0 text-sm font-bold text-orange-500">{formatPercent(snapshot.max_drawdown)}</CardContent>
-                            </Card>
-                            <Card title="Cách tính: Tổng bình phương các tỷ trọng&#10;Ý nghĩa: Độ tập trung mã. >0.25 là quá tập trung" className="p-2">
-                                <CardTitle className="text-[11px] text-muted-foreground flex items-center justify-between mb-1">HHI <div><Info className="h-3 w-3" /></div></CardTitle>
-                                <CardContent className="p-0 text-sm font-bold">{snapshot.hhi.toFixed(2)}</CardContent>
-                            </Card>
-                            <Card title="Cách tính: Số lượng / (10% x Thanh khoản trung bình 20 ngày)&#10;Ý nghĩa: Số ngày cần để bán sạch danh mục mà không ép giá" className="p-2">
-                                <CardTitle className="text-[11px] text-muted-foreground flex items-center justify-between mb-1">Liquidity <div><Info className="h-3 w-3" /></div></CardTitle>
-                                <CardContent className="p-0 text-sm font-bold">{snapshot.liquidity_days.toFixed(1)} d</CardContent>
-                            </Card>
-                        </div>
 
                         {/* Các chart nhỏ giải thích thêm */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

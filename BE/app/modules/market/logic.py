@@ -324,6 +324,12 @@ async def get_sector_analysis(db: AsyncSession) -> List[Dict[str, Any]]:
         date_7d AS (
             SELECT trading_date AS td FROM ranked_dates WHERE rn = 6
         ),
+        mtd_date AS (
+            SELECT MIN(trading_date) AS td
+            FROM {SCHEMA}.history_price
+            WHERE close IS NOT NULL
+              AND trading_date >= date_trunc('month', (SELECT td FROM latest_date)::date)::text
+        ),
         ytd_date AS (
             SELECT MIN(trading_date) AS td
             FROM {SCHEMA}.history_price
@@ -415,7 +421,10 @@ async def get_sector_analysis(db: AsyncSession) -> List[Dict[str, Any]]:
                      ELSE NULL END AS change_1y,
                 CASE WHEN y3.close > 0
                      THEN (cur.close - y3.close) / y3.close * 100
-                     ELSE NULL END AS change_3y
+                     ELSE NULL END AS change_3y,
+                CASE WHEN mtd.close > 0
+                     THEN (cur.close - mtd.close) / mtd.close * 100
+                     ELSE NULL END AS change_mtd
             FROM {SCHEMA}.company_overview co
             JOIN {SCHEMA}.history_price cur
                 ON cur.ticker = co.ticker
@@ -426,6 +435,9 @@ async def get_sector_analysis(db: AsyncSession) -> List[Dict[str, Any]]:
             LEFT JOIN {SCHEMA}.history_price d7
                 ON d7.ticker = co.ticker
                 AND d7.trading_date = (SELECT td FROM date_7d)
+            LEFT JOIN {SCHEMA}.history_price mtd
+                ON mtd.ticker = co.ticker
+                AND mtd.trading_date = (SELECT td FROM mtd_date)
             LEFT JOIN {SCHEMA}.history_price ytd
                 ON ytd.ticker = co.ticker
                 AND ytd.trading_date = (SELECT td FROM ytd_date)
@@ -469,6 +481,7 @@ async def get_sector_analysis(db: AsyncSession) -> List[Dict[str, Any]]:
                 ELSE NULL END AS pb,
             ROUND(AVG(change_1d)::numeric, 2) AS change_1d,
             ROUND(AVG(change_7d)::numeric, 2) AS change_7d,
+            ROUND(AVG(change_mtd)::numeric, 2) AS change_mtd,
             ROUND(AVG(change_ytd)::numeric, 2) AS change_ytd,
             ROUND(AVG(change_1y)::numeric, 2) AS change_1y,
             ROUND(AVG(change_3y)::numeric, 2) AS change_3y
@@ -488,6 +501,7 @@ async def get_sector_analysis(db: AsyncSession) -> List[Dict[str, Any]]:
             "pb": float(r["pb"]) if r["pb"] is not None else 0,
             "priceChange1D": float(r["change_1d"]) if r["change_1d"] is not None else 0,
             "priceChange7D": float(r["change_7d"]) if r["change_7d"] is not None else 0,
+            "priceChangeMTD": float(r["change_mtd"]) if r["change_mtd"] is not None else 0,
             "priceChangeYTD": float(r["change_ytd"]) if r["change_ytd"] is not None else 0,
             "priceChange1Y": float(r["change_1y"]) if r["change_1y"] is not None else 0,
             "priceChange3Y": float(r["change_3y"]) if r["change_3y"] is not None else 0,

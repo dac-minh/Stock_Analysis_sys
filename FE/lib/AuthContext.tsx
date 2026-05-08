@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, getAccessToken, clearTokens, fetchWithAuth } from './auth';
 
-const JUST_LOGGED_IN_KEY = 'finvision:auth:just-logged-in';
+const JUST_LOGGED_IN_KEY = 'stockpro:auth:just-logged-in';
 
 interface AuthContextType {
     user: User | null;

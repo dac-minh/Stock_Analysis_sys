@@ -1,49 +1,41 @@
 import json
 import re
-from app.modules.chatbot.llm.client import chat_completion
+from pydantic import BaseModel, Field
+from typing import Optional
+from app.modules.chatbot.llm.client import chat_completion_structured
 
 
 SYSTEM_PROMPT = """
 Bạn là bộ trích xuất entity cho chatbot chứng khoán Việt Nam.
-Chỉ trả về JSON thuần. Không giải thích.
-
-Schema:
-{
-  "tickers": [],
-  "metrics": [],
-  "period": {
-    "type": "quarter|year|range|recent|null",
-    "quarters": [],
-    "years": [],
-    "n_recent": null
-  },
-  "sector": null,
-  "comparison_mode": null
-}
+Chỉ trích xuất các thông tin được yêu cầu. Không giải thích.
 """
 
+class PeriodInfo(BaseModel):
+    type: Optional[str] = Field(None, description="quarter|year|range|recent|null")
+    quarters: list[int] = Field(default_factory=list)
+    years: list[int] = Field(default_factory=list)
+    n_recent: Optional[int] = None
 
-def extract_json_block(text: str) -> dict:
-    text = text.strip()
+class EntityExtractionResult(BaseModel):
+    tickers: list[str] = Field(default_factory=list)
+    metrics: list[str] = Field(default_factory=list)
+    period: PeriodInfo = Field(default_factory=PeriodInfo)
+    sector: Optional[str] = None
+    comparison_mode: Optional[str] = None
 
-    match = re.search(r"\{.*\}", text, re.DOTALL)
-    if match:
-        text = match.group(0)
-
-    return json.loads(text)
 
 
 async def extract_entities(message: str) -> dict:
-    response = await chat_completion(
-        user_prompt=f"Câu hỏi: {message}",
-        system_prompt=SYSTEM_PROMPT,
-        temperature=0.0,
-        max_tokens=300,
-    )
-
     try:
-        return extract_json_block(response)
-    except Exception:
+        response = await chat_completion_structured(
+            user_prompt=f"Câu hỏi: {message}",
+            system_prompt=SYSTEM_PROMPT,
+            response_format=EntityExtractionResult,
+            temperature=0.0,
+            max_tokens=300,
+        )
+        return response.model_dump()
+    except Exception as e:
         return {
             "tickers": [],
             "metrics": [],

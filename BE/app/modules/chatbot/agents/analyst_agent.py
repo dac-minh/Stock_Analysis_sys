@@ -1,20 +1,20 @@
 import asyncio
 import json
-import re
-from app.modules.chatbot.llm.client import chat_completion
+from pydantic import BaseModel, Field
+from app.modules.chatbot.llm.client import chat_completion_structured
 from app.modules.chatbot.llm.prompt_loader import load_prompt
 from app.modules.chatbot.sql.executor import execute_sql
 from app.modules.chatbot.agents.subagents.yoy_query_agent import run_yoy_query_agent
 from app.modules.chatbot.agents.subagents.peer_query_agent import run_peer_query_agent
-from app.modules.chatbot.agents.subagents.tester_agent import run_tester_agent
 from app.modules.chatbot.agents.subagents.insight_agent import run_insight_agent
 
 
-def _extract_json(text: str) -> dict:
-    match = re.search(r"\{.*\}", text, re.DOTALL)
-    if not match:
-        raise ValueError("Analyst agent không trả JSON hợp lệ")
-    return json.loads(match.group(0))
+class AnalysisPlan(BaseModel):
+    need_yoy: bool = Field(True, description="Cần so sánh theo thời gian không")
+    need_peer: bool = Field(False, description="Cần so sánh cùng ngành không")
+    yoy_focus: str = Field("", description="Trọng tâm so sánh YoY")
+    peer_focus: str = Field("", description="Trọng tâm so sánh Peer")
+    reasoning: str = Field("", description="Lý do")
 
 
 async def _execute_queries(queries: list[dict]) -> list[dict]:
@@ -55,8 +55,7 @@ async def run_analyst_agent(
         5.1a Sub-agent YoY Query    (nếu need_yoy)
         5.1b Sub-agent Peer Query   (nếu need_peer)
     Bước 3 — Thực thi SQL song song
-    Bước 4 — Sub-agent Tester Data kiểm tra chất lượng
-    Bước 5 — Sub-agent Insight tổng hợp → bản phân tích hoàn thiện
+    Bước 4 — Sub-agent Insight tổng hợp → bản phân tích hoàn thiện
 
     Returns:
         {
@@ -65,7 +64,6 @@ async def run_analyst_agent(
             "sql_used": list[str],
             "citations": list[dict],
             "thought": str,
-            "tester_report": dict,
         }
     """
 
@@ -75,34 +73,33 @@ async def run_analyst_agent(
 {message}
 
 Entities:
-{json.dumps(entities, ensure_ascii=False, indent=2)}
+{json.dumps(entities, ensure_ascii=False)}
 
 Hãy lập kế hoạch phân tích.
 """
-    plan_raw = await chat_completion(
-        user_prompt=plan_prompt,
-        system_prompt=plan_system,
-        temperature=0.0,
-        max_tokens=500,
-    )
-
     try:
-        plan = _extract_json(plan_raw)
+        plan = await chat_completion_structured(
+            user_prompt=plan_prompt,
+            system_prompt=plan_system,
+            response_format=AnalysisPlan,
+            temperature=0.0,
+            max_tokens=500,
+        )
     except Exception:
         # Fallback: kích hoạt cả hai sub-agent
-        plan = {
-            "need_yoy": True,
-            "need_peer": bool(entities.get("tickers")),
-            "yoy_focus": "Phân tích xu hướng các chỉ tiêu tài chính theo quý",
-            "peer_focus": "So sánh với các công ty cùng ngành",
-            "reasoning": "Fallback plan",
-        }
+        plan = AnalysisPlan(
+            need_yoy=True,
+            need_peer=bool(entities.get("tickers")),
+            yoy_focus="Phân tích xu hướng các chỉ tiêu tài chính theo quý",
+            peer_focus="So sánh với các công ty cùng ngành",
+            reasoning="Fallback plan"
+        )
 
-    need_yoy: bool = plan.get("need_yoy", True)
-    need_peer: bool = plan.get("need_peer", False)
-    yoy_focus: str = plan.get("yoy_focus", "")
-    peer_focus: str = plan.get("peer_focus", "")
-    thought: str = plan.get("reasoning", "")
+    need_yoy: bool = plan.need_yoy
+    need_peer: bool = plan.need_peer
+    yoy_focus: str = plan.yoy_focus
+    peer_focus: str = plan.peer_focus
+    thought: str = plan.reasoning
 
     # ── Bước 2: Chạy song song sub-agent query ───────────────────────
     async def _empty_yoy():
@@ -139,14 +136,10 @@ Hãy lập kế hoạch phân tích.
     query_results = await _execute_queries(all_queries)
     sql_used = [r["sql"] for r in query_results]
 
-    # ── Bước 4: Tester Data ───────────────────────────────────────────
-    tester_report = await run_tester_agent(query_results)
-
-    # ── Bước 5: Insight Agent → bản phân tích hoàn thiện ─────────────
+    # ── Bước 4: Insight Agent → bản phân tích hoàn thiện ─────────────
     answer = await run_insight_agent(
         user_message=message,
         query_results=query_results,
-        tester_report=tester_report,
         citations=citations,
     )
 
@@ -158,8 +151,6 @@ Hãy lập kế hoạch phân tích.
         "thought": (
             f"**Kế hoạch:** {thought}\n\n"
             f"**YoY:** {yoy_payload.get('thought', '')}\n\n"
-            f"**Peer:** {peer_payload.get('thought', '')}\n\n"
-            f"**Tester:** {tester_report.get('summary', '')}"
+            f"**Peer:** {peer_payload.get('thought', '')}"
         ),
-        "tester_report": tester_report,
     }

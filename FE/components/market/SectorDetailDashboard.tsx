@@ -228,7 +228,7 @@ export default function SectorDetailDashboard({ slug }: SectorDetailDashboardPro
                     <span>/</span>
                     <span className="text-foreground font-medium">{kpi.sectorName}</span>
                 </nav>
-                <h1 className="text-2xl font-bold text-foreground">{kpi.sectorName} <span className="text-orange-500 ml-1">FinVision</span></h1>
+                <h1 className="text-2xl font-bold text-foreground">{kpi.sectorName} <span className="text-orange-500 ml-1">StockPro</span></h1>
                 <p className="text-sm text-muted-foreground mt-1">
                     {kpi.stockCount} mã cổ phiếu • P/B: {kpi.pb || "N/A"} • Vốn hóa: {fmt(kpi.marketCap)} tỷ
                 </p>

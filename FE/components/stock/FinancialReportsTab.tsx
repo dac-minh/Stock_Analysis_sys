@@ -772,7 +772,7 @@ export default function FinancialReportsTab() {
             // Row 1: Copyright / Logo text
             sheet.mergeCells(1, 1, 1, leftColCount);
             const copyrightCell = sheet.getCell(1, 1);
-            copyrightCell.value = `© FinVision - Nền tảng phân tích đầu tư chứng khoán chuyên sâu`;
+            copyrightCell.value = `© StockPro - Nền tảng phân tích đầu tư chứng khoán chuyên sâu`;
             copyrightCell.font = { name: 'Arial', size: 11, bold: true, italic: true, color: { argb: 'FFea580c' } }; // Orange tint
             copyrightCell.alignment = { vertical: 'middle', horizontal: 'left' };
             sheet.getRow(1).height = 25;

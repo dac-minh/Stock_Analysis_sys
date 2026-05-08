@@ -130,6 +130,10 @@
   }
 }
 
+#root-home-page, #root-home-page * {
+  font-family: var(--font-roboto), Roboto, sans-serif !important;
+}
+
 /* ================================================================= */
 /*  Price Board — blinking cell animations & utilities                */
 /* ================================================================= */

@@ -42,7 +42,7 @@ export default function Home() {
     };
 
     return (
-        <div className="min-h-screen relative bg-background">
+        <div id="root-home-page" className="min-h-screen relative bg-background font-sans">
 
             {/* Ambient Background Glows */}
             {!isAuthenticated && (
@@ -209,7 +209,7 @@ export default function Home() {
                     </div>
 
                     <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-foreground to-foreground/70 mb-8 max-w-4xl animate-in fade-in slide-in-from-bottom-6 duration-1000">
-                        Làm chủ thị trường với chứng khoán <span className="text-primary bg-none">FinVision</span>
+                        Làm chủ thị trường với chứng khoán <span className="text-primary bg-none">StockPro</span>
                     </h1>
 
                     <p className="text-xl text-muted-foreground mb-12 max-w-2xl leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-150">
@@ -428,7 +428,7 @@ export default function Home() {
                                     <Rocket className="h-8 w-8 text-primary" /> Phân tích dòng tiền thông minh
                                 </h3>
                                 <p className="text-muted-foreground lg:text-lg leading-relaxed">
-                                    Dữ liệu dòng tiền của FinVision được bóc tách sâu sắc theo từng nhóm ngành và mã cổ phiếu riêng lẻ, nhận diện cơ hội từ những diễn biến dòng tiền ẩn giấu.
+                                    Dữ liệu dòng tiền của StockPro được bóc tách sâu sắc theo từng nhóm ngành và mã cổ phiếu riêng lẻ, nhận diện cơ hội từ những diễn biến dòng tiền ẩn giấu.
                                 </p>
                             </div>
                             <Button size="lg" className="shrink-0 h-12 px-8 bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:scale-105 transition-transform" onClick={openAuthModal}>
@@ -568,7 +568,7 @@ export default function Home() {
 
                     <h2 className="text-4xl font-bold mb-6">Sẵn sàng nâng tầm đầu tư?</h2>
                     <p className="text-xl text-muted-foreground mb-10 max-w-xl">
-                        Tham gia cùng hàng ngàn nhà đầu tư khác sử dụng FinVision để phân tích và ra quyết định.
+                        Tham gia cùng hàng ngàn nhà đầu tư khác sử dụng StockPro để phân tích và ra quyết định.
                     </p>
                     <Button size="lg" className="h-14 px-10 text-lg font-bold shadow-xl shadow-primary/25 hover:-translate-y-1 transition-transform" onClick={openAuthModal}>
                         Đăng ký miễn phí ngay

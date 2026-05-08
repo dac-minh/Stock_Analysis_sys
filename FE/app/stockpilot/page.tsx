@@ -23,8 +23,8 @@ import { fetchWithAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
-const SESSION_STORAGE_KEY = "finvision:finpilot:session-id";
-const HISTORY_STORAGE_KEY = "finvision:finpilot:history";
+const SESSION_STORAGE_KEY = "stockpro:stockpilot:session-id";
+const HISTORY_STORAGE_KEY = "stockpro:stockpilot:history";
 
 const SUGGESTIONS = [
     "Top 5 doanh nghiep co ROE cao nhat trong 4 quy gan day",
@@ -138,7 +138,7 @@ const MODE_CONFIG: Record<ChatMode, { label: string; icon: typeof Zap; desc: str
     analysis: { label: "Phân tích", icon: BrainCircuit, desc: "Analyst" },
 };
 
-export default function FinPilotPage() {
+export default function StockPilotPage() {
     const [messages, setMessages] = useState<Message[]>([]);
     const [question, setQuestion] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -175,7 +175,7 @@ export default function FinPilotPage() {
                 setCurrentSessionId(newId);
             }
         } catch (error) {
-            console.error("Failed to load FinPilot history", error);
+            console.error("Failed to load StockPilot history", error);
         }
     }, []);
 
@@ -371,7 +371,7 @@ export default function FinPilotPage() {
                     ? data.detail.error
                     : typeof data?.detail === "string"
                     ? data.detail
-                    : "Khong the goi FinPilot";
+                    : "Khong the goi StockPilot";
                 throw new Error(detail);
             }
 
@@ -425,7 +425,7 @@ export default function FinPilotPage() {
                                 <Bot className="h-5 w-5" />
                             </div>
                             <div>
-                                <p className="text-sm font-semibold text-foreground">FinPilot</p>
+                                <p className="text-sm font-semibold text-foreground">StockPilot</p>
                                 <p className="text-xs text-muted-foreground">Tra loi theo ngu canh, LLM tu quyet dinh cach xu ly</p>
                             </div>
                         </div>
@@ -551,7 +551,7 @@ export default function FinPilotPage() {
                                     <div className="min-w-0 flex-1 space-y-3">
                                         <div className="flex items-center gap-2">
                                             <span className="text-sm font-semibold text-foreground">
-                                                {msg.role === "assistant" ? "FinPilot" : "Ban"}
+                                                {msg.role === "assistant" ? "StockPilot" : "Ban"}
                                             </span>
                                             {msg.meta?.mode_used && (
                                                 <span className="rounded bg-primary/10 px-2 py-0.5 text-[11px] text-primary">

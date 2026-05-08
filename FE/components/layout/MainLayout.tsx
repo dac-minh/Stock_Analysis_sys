@@ -11,7 +11,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useSessionTracking, usePageViewTracking, useErrorTracking } from "@/hooks/useTracking";
 import { PriceBoardPopup } from "@/components/dashboard/PriceBoardPopup";
 
-const JUST_LOGGED_IN_KEY = "finvision:auth:just-logged-in";
+const JUST_LOGGED_IN_KEY = "stockpro:auth:just-logged-in";
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();

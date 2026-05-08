@@ -6,9 +6,9 @@ import { X } from "lucide-react";
 import { useSettings } from "@/lib/SettingsContext";
 
 const VN_TIMEZONE = "Asia/Ho_Chi_Minh";
-const STORAGE_NEVER_SHOW_KEY = "finvision:price-board-popup:never-show";
-const STORAGE_HIDE_TODAY_KEY = "finvision:price-board-popup:hide-today";
-const SESSION_CLOSE_KEY = "finvision:price-board-popup:session-closed";
+const STORAGE_NEVER_SHOW_KEY = "stockpro:price-board-popup:never-show";
+const STORAGE_HIDE_TODAY_KEY = "stockpro:price-board-popup:hide-today";
+const SESSION_CLOSE_KEY = "stockpro:price-board-popup:session-closed";
 
 function getVietnamNow() {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -17,14 +17,16 @@ function getVietnamNow() {
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
+    weekday: "short",
     hour12: false,
   }).formatToParts(new Date());
 
   const map = Object.fromEntries(parts.map((part) => [part.type, part.value]));
   const dateKey = `${map.year}-${map.month}-${map.day}`;
   const hour = Number(map.hour);
+  const weekday = map.weekday?.toLowerCase() ?? "";
 
-  return { dateKey, hour };
+  return { dateKey, hour, weekday };
 }
 
 export function PriceBoardPopup({ onHandled }: { onHandled?: () => void }) {
@@ -40,8 +42,9 @@ export function PriceBoardPopup({ onHandled }: { onHandled?: () => void }) {
       return;
     }
 
-    const { dateKey, hour } = getVietnamNow();
-    const isInDisplayWindow = hour >= 9 && hour < 15;
+    const { dateKey, hour, weekday } = getVietnamNow();
+    const isBusinessDay = ['mon', 'tue', 'wed', 'thu', 'fri'].includes(weekday);
+    const isInDisplayWindow = isBusinessDay && hour >= 9 && hour < 15;
 
     if (!isInDisplayWindow) {
       setIsVisible(false);

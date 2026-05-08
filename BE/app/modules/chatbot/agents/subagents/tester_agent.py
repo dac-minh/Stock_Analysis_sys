@@ -1,5 +1,6 @@
 import json
 import re
+import ast
 from app.modules.chatbot.llm.client import chat_completion
 from app.modules.chatbot.llm.prompt_loader import load_prompt
 
@@ -8,7 +9,15 @@ def _extract_json(text: str) -> dict:
     match = re.search(r"\{.*\}", text, re.DOTALL)
     if not match:
         raise ValueError("Tester agent không trả JSON hợp lệ")
-    return json.loads(match.group(0))
+    json_str = match.group(0)
+    try:
+        return json.loads(json_str)
+    except json.JSONDecodeError:
+        s = json_str.replace("null", "None").replace("true", "True").replace("false", "False")
+        try:
+            return ast.literal_eval(s)
+        except Exception:
+            raise ValueError(f"Không thể parse JSON: {json_str}")
 
 
 def _summarize_rows(rows: list[dict], max_rows: int = 5) -> list[dict]:
@@ -45,10 +54,10 @@ async def run_tester_agent(query_results: list[dict]) -> dict:
             "sample_rows": sample,
         })
 
-    prompt = f"""Kết quả SQL cần kiểm tra:
-{json.dumps(data_summary, ensure_ascii=False, indent=2)}
+    prompt = f"""Dữ liệu cần kiểm tra:
+{json.dumps(data_summary, ensure_ascii=False)}
 
-Hãy kiểm tra chất lượng dữ liệu và trả về báo cáo.
+Hãy sinh các SQL kiểm tra chéo (Data Quality & Fact-check).
 """
 
     response = await chat_completion(

@@ -126,3 +126,20 @@ async def track_search(
 async def news_sources(db: AsyncSession = Depends(get_db)):
     """Danh sách các nguồn tin để lọc."""
     return await logic.get_sources(db)
+
+
+# ── 8. Sentiment summary (Gauges) ─────────────────────────────────
+@router.get("/sentiment-summary")
+async def sentiment_summary(db: AsyncSession = Depends(get_db)):
+    """Tóm tắt tâm lý thị trường qua tin tức (ngày/tháng)."""
+    return await logic.get_sentiment_summary(db)
+
+
+# ── 9. Sector sentiment (Day/Week/Month) ──────────────────────────
+@router.get("/sector-sentiment")
+async def sector_sentiment(
+    time_range: str = Query("month", description="day | week | month"),
+    db: AsyncSession = Depends(get_db),
+):
+    """Tâm lý trung bình theo ngành trong khoảng thời gian chọn."""
+    return await logic.get_sector_sentiment(db, time_range=time_range)

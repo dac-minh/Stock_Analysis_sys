@@ -22,10 +22,10 @@ export function Footer() {
                         <div className="flex items-center gap-3 text-2xl font-bold text-orange-600">
                             <img
                                 src="/favicon.ico"
-                                alt="FinVision Logo"
+                                alt="StockPro Logo"
                                 className="h-10 w-10 rounded-xl border border-orange-200 bg-white object-contain"
                             />
-                            <span>FinVision</span>
+                            <span>StockPro</span>
                         </div>
                         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600">
                             Hệ sinh thái dữ liệu và phân tích đầu tư dành cho thị trường Việt Nam. Tập trung vào tốc độ, độ tin cậy và trải nghiệm trực quan để hỗ trợ nhà đầu tư đưa ra quyết định tốt hơn mỗi phiên.
@@ -89,14 +89,14 @@ export function Footer() {
                         <h4 className="mb-4 text-base font-bold text-slate-900">Liên hệ</h4>
                         <ul className="space-y-3 text-sm text-slate-600">
                             <li className="flex items-start gap-2.5"><Phone className="mt-0.5 h-4 w-4 text-orange-500" /><span>1900 1234 (08:00 - 17:30)</span></li>
-                            <li className="flex items-start gap-2.5"><Mail className="mt-0.5 h-4 w-4 text-orange-500" /><span>support@finvision.vn</span></li>
+                            <li className="flex items-start gap-2.5"><Mail className="mt-0.5 h-4 w-4 text-orange-500" /><span>support@stockpro.vn</span></li>
                             <li className="flex items-start gap-2.5"><MapPin className="mt-0.5 h-4 w-4 text-orange-500" /><span>Bitexco Financial Tower, Q.1, TP.HCM</span></li>
                         </ul>
                     </div>
                 </div>
 
                 <div className="mt-8 flex flex-col items-start justify-between gap-3 border-t border-slate-200 pt-6 text-xs text-slate-500 md:flex-row md:items-center">
-                    <p>© 2026 FinVision JSC. All rights reserved.</p>
+                    <p>© 2026 StockPro JSC. All rights reserved.</p>
                     <div className="flex flex-wrap gap-5">
                         <Link href="#" className="transition hover:text-orange-600">Điều khoản sử dụng</Link>
                         <Link href="#" className="transition hover:text-orange-600">Chính sách bảo mật</Link>

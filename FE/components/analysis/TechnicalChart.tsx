@@ -423,10 +423,10 @@ const TechnicalChart: React.FC<TechnicalChartProps> = ({ data, overlays, subIndi
   const hasSubIndicator = subConfig !== null;
 
   // Chart heights
-  const mainHeight = hasSubIndicator ? "48%" : "62%";
+  const mainHeight = hasSubIndicator ? "48%" : "56%";
   const volumeHeight = hasSubIndicator ? "12%" : "18%";
-  const volumeTop = hasSubIndicator ? "54%" : "68%";
-  const subTop = "72%";
+  const volumeTop = hasSubIndicator ? "54%" : "70%";
+  const subTop = "74%";
 
   // Build ECharts option
   const getOption = useCallback(() => {

@@ -278,6 +278,6 @@ Mục đích: Lưu tập chỉ số vĩ mô Việt Nam theo năm.
 
 - Ưu tiên truy vấn các cột đã chuẩn hóa (`ticker`, `year`, `quarter`, `ind_code`, `published`).
 - Với dữ liệu thời gian ở dạng text (`trading_date`, `public_date`), cần chuẩn hóa trước khi dùng cho filter khoảng ngày.
-- Với bảng `bctc`, xem mapping về ý nghĩa của tên bảng norm_name ở dưới phần mapping. Sau đó gọiưu tiên `ind_code` thay vì `ind_name` để tránh lệch do biến thể tên chỉ tiêu. 
+- Với bảng `bctc`, xem mapping về ý nghĩa của tên bảng norm_name ở dưới phần mapping. Sau đó gọi ưu tiên `ind_code` thay vì `ind_name` để tránh lệch do biến thể tên chỉ tiêu. 
 - Ưu tiên tìm được số bên trong các bảng dữ liệu, nếu không có thì thực hiện tính bằng các chỉ tiêu hiện có từ các bảng nhé. 
-
+- **ĐẶC BIỆT LƯU Ý TYPE CAST:** Các cột như `ticker`, `ind_code`, `quarter` (trong `bctc`) là chuỗi (varchar/text). TRONG LỆNH SQL bắt buộc phải bọc giá trị bằng dấu nháy đơn (ví dụ: `quarter = 'Q1'`, `ind_code = '11'`). Nếu không bọc nháy đơn, PostgreSQL sẽ báo lỗi `operator does not exist: character varying = integer`.

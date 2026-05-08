@@ -38,7 +38,7 @@ export const DEFAULT_SIDEBAR_ITEMS: SidebarNavItem[] = [
     { id: "analysis",    name: "Phân tích",  href: "/analysis",    iconName: "PieChart",        enabled: true },
     { id: "portfolio", name: "Quản trị danh mục", href: "/portfolio", iconName: "BriefcaseBusiness", enabled: true },
     { id: "news",        name: "Tin tức",    href: "/news",        iconName: "Newspaper",       enabled: true },
-    { id: "finpilot",    name: "FinPilot",   href: "/finpilot",    iconName: "Bot",             enabled: true },
+    { id: "stockpilot",    name: "StockPilot",   href: "/stockpilot",    iconName: "Bot",             enabled: true },
     { id: "settings",    name: "Cài đặt",    href: "/settings",    iconName: "Settings",        enabled: true },
 ];
 
@@ -132,9 +132,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         if (v) {
             try {
                 // Khi bật lại bảng điện, reset các cờ cấu hình tắt của iframe
-                localStorage.removeItem("finvision:price-board-popup:never-show");
-                localStorage.removeItem("finvision:price-board-popup:hide-today");
-                sessionStorage.removeItem("finvision:price-board-popup:session-closed");
+                localStorage.removeItem("stockpro:price-board-popup:never-show");
+                localStorage.removeItem("stockpro:price-board-popup:hide-today");
+                sessionStorage.removeItem("stockpro:price-board-popup:session-closed");
             } catch { /* ignore */ }
         }
     };

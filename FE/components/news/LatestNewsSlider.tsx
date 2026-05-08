@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, ChevronRight, Clock, ExternalLink, Newspaper } from "lucide-react";
+import { extractNewsImage } from "@/lib/newsImage";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
 
@@ -152,7 +153,7 @@ const LatestNewsSlider: React.FC = () => {
             >
                 {items.map((item) => {
                     const badgeColor = SOURCE_COLORS[item.source ?? ""] || "bg-slate-600";
-                    const hasImg = item.summary ? /<img\s/i.test(item.summary) : false;
+                    const imgSrc = extractNewsImage(item.summary);
 
                     return (
                         <a
@@ -164,17 +165,18 @@ const LatestNewsSlider: React.FC = () => {
                             onClick={() => trackClick(item.id)}
                             className="w-[calc((100%-48px)/4)] min-w-[calc((100%-48px)/4)] shrink-0 snap-start rounded-xl border bg-card overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer group flex flex-col"
                         >
-                                <div className="relative w-full h-[140px] bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
-                                {hasImg ? (
+                            <div className="relative w-full h-[140px] bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
+                                {imgSrc !== "No image" ? (
                                     <img
-                                        src={item.summary!.match(/<img[^>]+src=["']([^"']+)["']/i)?.[1] ?? ""}
+                                        src={imgSrc}
                                         alt={item.title ?? ""}
                                         className="w-full h-full object-cover"
                                         loading="lazy"
                                     />
                                 ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-orange-950/30 dark:to-amber-950/30">
+                                    <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-orange-950/30 dark:to-amber-950/30 text-orange-400 text-xs font-semibold">
                                         <Newspaper className="h-10 w-10 text-orange-300" />
+                                        No image
                                     </div>
                                 )}
                                 <Badge className={`absolute top-2 left-2 ${badgeColor} text-white text-[11px] px-2 py-0.5`}>

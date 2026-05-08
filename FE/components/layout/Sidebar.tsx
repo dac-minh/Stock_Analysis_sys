@@ -53,10 +53,10 @@ export function Sidebar({ className, collapsed, onToggle }: SidebarProps) {
                 <div className="flex items-center gap-2 font-bold text-xl text-primary overflow-hidden">
                     <img
                         src="/favicon.ico"
-                        alt="FinVision Logo"
+                        alt="StockPro Logo"
                         className="h-8 w-8 min-w-8 object-contain rounded-lg bg-white/10"
                     />
-                    {!collapsed && <span className="whitespace-nowrap transition-opacity duration-300">FinVision</span>}
+                    {!collapsed && <span className="whitespace-nowrap transition-opacity duration-300">StockPro</span>}
                 </div>
             </div>
 

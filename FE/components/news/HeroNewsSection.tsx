@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, ChevronRight, Clock, ExternalLink, Newspaper } from "lucide-react";
+import { extractNewsImage } from "@/lib/newsImage";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
 
@@ -137,7 +138,7 @@ const HeroNewsSection = () => {
             >
                 {items.map((item) => {
                     const badgeColor = SOURCE_COLORS[item.source ?? ""] || "bg-slate-600";
-                    const hasImg = item.summary ? /<img\s/i.test(item.summary) : false;
+                    const imgSrc = extractNewsImage(item.summary);
 
                     const Wrapper = item.link ? "a" : "div";
                     const wrapperProps = item.link
@@ -153,16 +154,17 @@ const HeroNewsSection = () => {
                         >
                             {/* Thumbnail */}
                             <div className="relative w-full h-[140px] bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
-                                {hasImg ? (
+                                {imgSrc !== "No image" ? (
                                     <img
-                                        src={item.summary!.match(/<img[^>]+src=["']([^"']+)["']/i)?.[1] ?? ""}
+                                        src={imgSrc}
                                         alt={item.title ?? ""}
                                         className="w-full h-full object-cover"
                                         loading="lazy"
                                     />
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center">
-                                        <Newspaper className="h-10 w-10 text-muted-foreground" />
+                                    <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground text-xs font-semibold">
+                                        <Newspaper className="h-10 w-10" />
+                                        No image
                                     </div>
                                 )}
                                 <Badge className={`absolute top-2 left-2 ${badgeColor} text-white text-[11px] px-2 py-0.5`}>

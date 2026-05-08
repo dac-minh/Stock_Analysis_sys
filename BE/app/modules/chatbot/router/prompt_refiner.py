@@ -1,6 +1,5 @@
-import json
-import re
-from app.modules.chatbot.llm.client import chat_completion
+from pydantic import BaseModel, Field
+from app.modules.chatbot.llm.client import chat_completion_structured
 
 SYSTEM_PROMPT = """
 Bạn là tư duy ngôn ngữ và tối ưu lệnh (Prompt Refiner) cho hệ thống tài chính chứng khoán.
@@ -10,7 +9,7 @@ CÓ CÁC NHIỆM VỤ NHƯ SAU:
 1. Đọc câu hỏi gốc của user.
 2. Dịch lại thành một "refined_message" chuẩn mực hơn để đưa vào máy truy vấn dựa trên kiến thức về Database.
 3. Loai bỏ sự nhầm lẫn với Mã chứng khoán (Ticker). Ví dụ: Chữ "TOP", "MUA", "BAN", "CAO", "THAP" nếu người dùng nói "tìm top doanh nghiệp có ROE cao nhất" thì "TOP" không phải là mã cổ phiếu TOP, hãy dịch lại là "Tìm những doanh nghiệp có ROE lớn nhất". Tránh viết in hoa lung tung.
-4. Trả về JSON chứa: "refined_message" (câu hỏi đã chuẩn hoá).
+4. Trích xuất câu hỏi đã chuẩn hóa theo đúng cấu trúc.
 
 LƯU Ý VỀ METADATA DATABASE (CÁC BẢNG LƯU TRỮ VÀ CÁC TRƯỜNG):
 - history_price: Giá cổ phiếu lịch sử (cột: ticker, trading_date, open, high, low, close, volume).
@@ -27,18 +26,10 @@ LƯU Ý VỀ METADATA DATABASE (CÁC BẢNG LƯU TRỮ VÀ CÁC TRƯỜNG):
 - news: Tin bài (cột: id, source, title, link, published, summary).
 
 Hãy viết lại câu hỏi sao cho sát nghĩa nhất với các thực thể phía trên.
-
-Trả về JSON:
-{
-  "refined_message": "câu hỏi đã chuẩn hoá"
-}
 """
 
-def extract_json(text: str) -> dict:
-    match = re.search(r"\{.*\}", text, re.DOTALL)
-    if not match:
-        raise ValueError("LLM không trả JSON hợp lệ")
-    return json.loads(match.group(0))
+class RefinedPrompt(BaseModel):
+    refined_message: str = Field(..., description="Câu hỏi đã được chuẩn hóa")
 
 async def refine_prompt(message: str) -> str:
     prompt = f"""
@@ -48,14 +39,14 @@ Câu hỏi user:
 Hãy tối ưu câu hỏi.
 """
     try:
-        response = await chat_completion(
+        response = await chat_completion_structured(
             user_prompt=prompt,
             system_prompt=SYSTEM_PROMPT,
+            response_format=RefinedPrompt,
             temperature=0.0,
             max_tokens=256,
         )
-        data = extract_json(response)
-        refined = data.get("refined_message")
+        refined = response.refined_message
         return refined if refined else message
     except Exception as e:
         return message

@@ -57,6 +57,7 @@ class SectorAnalysisItem(BaseModel):
     pb: float
     priceChange1D: float
     priceChange7D: float
+    priceChangeMTD: float = Field(0.0, description="Month-to-date price change")
     priceChangeYTD: float
     priceChange1Y: float
     priceChange3Y: float

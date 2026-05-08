@@ -872,7 +872,7 @@ export default function SettingsPage() {
                                     <h3 className="font-semibold text-foreground">Bảng điện iframe</h3>
                                 </div>
                                 <p className="text-sm text-muted-foreground">
-                                    Bật tính năng hiển thị iframe bảng điện thu nhỏ trong giờ giao dịch (9h - 15h).
+                                    Bật tính năng hiển thị iframe bảng điện thu nhỏ trong giờ giao dịch từ thứ 2 đến thứ 6 (9h - 15h).
                                 </p>
                                 <Badge variant="outline" className="text-xs w-fit text-foreground">
                                     {showPriceBoardPopup ? "Đang bật" : "Đang tắt"}

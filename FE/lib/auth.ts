@@ -29,7 +29,7 @@ export const getRefreshToken = () => Cookies.get('refresh_token');
 
 // Lưu tokens
 export const setTokens = (access: string, refresh: string) => {
-    Cookies.set('access_token', access, { secure: true, sameSite: 'strict' });
+    Cookies.set('access_token', access, { secure: true, sameSite: 'strict', expires: 1 }); // 1 day (auto-refresh via refresh_token)
     Cookies.set('refresh_token', refresh, { secure: true, sameSite: 'strict', expires: 7 }); // 7 days
 };
 

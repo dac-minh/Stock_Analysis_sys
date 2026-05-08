@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { extractNewsImage } from "@/lib/newsImage";
 import {
     Search,
     Calendar,
@@ -42,13 +43,6 @@ const SOURCE_COLORS: Record<string, string> = {
     TCBS: "bg-teal-600",
     NDH: "bg-rose-600",
 };
-
-/** Extract the first <img src="..."> from an HTML string */
-function extractImgSrc(html: string | null): string | null {
-    if (!html) return null;
-    const m = html.match(/<img[^>]+src=["']([^"']+)["']/i);
-    return m ? m[1] : null;
-}
 
 function timeAgo(iso: string | null): string {
     if (!iso) return "";
@@ -346,6 +340,7 @@ const NewsList: React.FC<NewsListProps> = ({ onSearch }) => {
                 ) : (
                     articles.map((article) => {
                         const badgeColor = SOURCE_COLORS[article.source ?? ""] || "bg-slate-600";
+                        const imgSrc = extractNewsImage(article.summary);
                         return (
                             <a
                                 key={article.id}
@@ -358,16 +353,16 @@ const NewsList: React.FC<NewsListProps> = ({ onSearch }) => {
                                 <Card className="border-none shadow-sm hover:shadow-md hover:border-l-4 hover:border-l-orange-500 transition-all group">
                                     <CardContent className="p-4 flex gap-4">
                                         <div className="w-24 h-[72px] shrink-0 rounded-lg overflow-hidden bg-gradient-to-br from-muted to-muted/50">
-                                            {extractImgSrc(article.summary) ? (
+                                            {imgSrc !== "No image" ? (
                                                 <img
-                                                    src={extractImgSrc(article.summary)!}
+                                                    src={imgSrc}
                                                     alt={article.title ?? ""}
                                                     className="w-full h-full object-cover"
                                                     loading="lazy"
                                                 />
                                             ) : (
                                                 <div className={`${badgeColor} w-full h-full flex items-center justify-center text-white font-bold text-xs text-center p-2`}>
-                                                    {article.source || "Tin"}
+                                                    No image
                                                 </div>
                                             )}
                                         </div>

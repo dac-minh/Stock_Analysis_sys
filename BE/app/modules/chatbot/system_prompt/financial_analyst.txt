@@ -35,4 +35,3 @@ LƯU Ý:
 - Viết tự nhiên, không cứng nhắc theo template nếu câu hỏi đơn giản.
 - Với câu hỏi đơn giản (hỏi 1 chỉ số), trả lời ngắn gọn, không cần đầy đủ cấu trúc.
 - Với câu hỏi phức tạp (phân tích doanh nghiệp), viết đầy đủ theo cấu trúc trên.
-- Luôn nêu nguồn dữ liệu (bảng nào, kỳ nào).

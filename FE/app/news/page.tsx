@@ -5,6 +5,8 @@ import LatestNewsSlider from "@/components/news/LatestNewsSlider";
 import NewsList from "@/components/news/NewsList";
 import MostClickedNews from "@/components/news/MostClickedNews";
 import HotSearch from "@/components/news/HotSearch";
+import SentimentGauges from "@/components/news/SentimentGauges";
+import SectorPerformanceWidget from "@/components/news/SectorPerformanceWidget";
 
 export default function NewsPage() {
     const [hotKeyword, setHotKeyword] = useState("");
@@ -19,7 +21,7 @@ export default function NewsPage() {
         <div className="min-h-screen bg-background">
             <div className="max-w-[1400px] mx-auto px-6 py-8">
                 {/* Page header */}
-                <div className="mb-8">
+                <div className="mb-10">
                     <h1 className="text-2xl font-bold text-foreground">
                         Tin tức & Sự kiện
                     </h1>
@@ -50,6 +52,8 @@ export default function NewsPage() {
                     <div className="space-y-6">
                         <HotSearch onKeywordClick={handleHotKeywordClick} />
                         <MostClickedNews />
+                        <SentimentGauges />
+                        <SectorPerformanceWidget />
                     </div>
                 </div>
             </div>
@@ -58,7 +62,7 @@ export default function NewsPage() {
             <footer className="bg-slate-900 text-white mt-12 border-t-4 border-orange-500">
                 <div className="max-w-[1400px] mx-auto p-8 grid grid-cols-1 md:grid-cols-4 gap-8">
                     <div>
-                        <h3 className="font-bold text-lg mb-4 text-orange-400">FinVision</h3>
+                        <h3 className="font-bold text-lg mb-4 text-orange-400">StockPro</h3>
                         <p className="text-sm text-gray-400">
                             Nền tảng phân tích tài chính hàng đầu Việt Nam.
                         </p>
@@ -82,7 +86,7 @@ export default function NewsPage() {
                     <div>
                         <h3 className="font-bold text-md mb-4">Liên hệ</h3>
                         <p className="text-sm text-gray-400">
-                            Email: support@finvision.com<br />
+                            Email: support@stockpro.com<br />
                             Hotline: 1900 1234
                         </p>
                     </div>

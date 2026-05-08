@@ -8,7 +8,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     """Application settings loaded from .env file."""
 
-    APP_NAME: str = "Stock Analysis System"
+    APP_NAME: str = "StockPro Analysis System"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
     SECRET_KEY: str = "change-me-in-production"
@@ -47,14 +47,14 @@ class Settings(BaseSettings):
     SMTP_PORT: int = 587
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
-    EMAIL_FROM: str = "noreply@stockanalysis.vn"
+    EMAIL_FROM: str = "noreply@stockpro.vn"
     FRONTEND_URL: str = "http://localhost:3000"
 
     LM_STUDIO_EMBED_URL: str = "http://localhost:1234/v1/embeddings"
     LM_STUDIO_EMBED_MODEL: str = "text-embedding-bge-m3"
 
     # OpenAI settings
-    OPENAI_API_KEY: str = ""
+    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY")
     OPENAI_MODEL: str = "gpt-5.4-mini"
     OPENAI_FINETUNED_MODEL: str | None = None
 

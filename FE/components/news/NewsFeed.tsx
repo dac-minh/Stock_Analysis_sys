@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2 } from "lucide-react";
+import { extractNewsImage } from "@/lib/newsImage";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
 
@@ -25,13 +26,6 @@ const SOURCE_COLORS: Record<string, string> = {
     TCBS: "bg-teal-600",
     NDH: "bg-rose-600",
 };
-
-/** Extract the first <img src> from an HTML string */
-function extractImgSrc(html: string | null): string | null {
-    if (!html) return null;
-    const m = html.match(/<img[^>]+src=["']([^"']+)["']/i);
-    return m ? m[1] : null;
-}
 
 const KEYWORDS = [
     "VN-Index", "Cổ phiếu", "Ngân hàng", "Bất động sản",
@@ -130,12 +124,12 @@ const NewsFeed = () => {
                 </h2>
                 <div className="space-y-4">
                     {feedItems.map((news) => {
-                        const imgSrc = extractImgSrc(news.summary);
+                        const imgSrc = extractNewsImage(news.summary);
                         const inner = (
                             <Card className="border-none shadow-sm hover:shadow-md transition-shadow">
                                 <CardContent className="p-4 flex gap-4">
                                     <div className="w-24 h-[72px] shrink-0 rounded-lg overflow-hidden bg-gradient-to-br from-muted to-muted/50">
-                                        {imgSrc ? (
+                                        {imgSrc !== "No image" ? (
                                             <img
                                                 src={imgSrc}
                                                 alt={news.title ?? ""}
@@ -144,7 +138,7 @@ const NewsFeed = () => {
                                             />
                                         ) : (
                                             <div className={`${SOURCE_COLORS[news.source ?? ""] || "bg-slate-600"} w-full h-full flex items-center justify-center text-white font-bold text-xs text-center p-2`}>
-                                                {news.source || "Tin"}
+                                                No image
                                             </div>
                                         )}
                                     </div>
