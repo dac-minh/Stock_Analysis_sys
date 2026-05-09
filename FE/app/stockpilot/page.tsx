@@ -36,7 +36,8 @@ const SUGGESTIONS = [
 interface ChatRequest {
     session_id?: string;
     message: string;
-    mode?: "auto" | "search" | "analysis";   // ← đúng
+    mode?: "auto" | "search" | "analysis";
+    model_choice?: string;
     context?: Record<string, unknown>;
 }
 
@@ -148,6 +149,7 @@ export default function StockPilotPage() {
     const [currentSessionId, setCurrentSessionId] = useState("");
 
     const [selectedMode, setSelectedMode] = useState<ChatMode>("auto");
+    const [selectedModel, setSelectedModel] = useState<string>("1");
     const [showAnalystConfirm, setShowAnalystConfirm] = useState(false);
 
     const endRef = useRef<HTMLDivElement | null>(null);
@@ -353,6 +355,7 @@ export default function StockPilotPage() {
                 session_id: currentSessionId || getOrCreateSessionId(),
                 message: trimmed,
                 mode: forceMode || selectedMode,
+                model_choice: selectedModel,
                 context: {},
             };
 
@@ -370,8 +373,8 @@ export default function StockPilotPage() {
                 const detail = typeof data?.detail?.error === "string"
                     ? data.detail.error
                     : typeof data?.detail === "string"
-                    ? data.detail
-                    : "Khong the goi StockPilot";
+                        ? data.detail
+                        : "Khong the goi StockPilot";
                 throw new Error(detail);
             }
 
@@ -425,8 +428,20 @@ export default function StockPilotPage() {
                                 <Bot className="h-5 w-5" />
                             </div>
                             <div>
-                                <p className="text-sm font-semibold text-foreground">StockPilot</p>
-                                <p className="text-xs text-muted-foreground">Tra loi theo ngu canh, LLM tu quyet dinh cach xu ly</p>
+                                <div className="flex items-center gap-2">
+                                    <p className="text-sm font-semibold text-foreground">StockPilot</p>
+                                    <select
+                                        value={selectedModel}
+                                        onChange={(e) => setSelectedModel(e.target.value)}
+                                        className="h-6 rounded-md border border-border/80 bg-muted/50 px-2 text-[10px] font-medium text-muted-foreground outline-none transition hover:bg-muted"
+                                        title="Chuyển đổi model"
+                                    >
+                                        <option value="1">GPT-5.4 (Mặc định)</option>
+                                        <option value="2">DEEPSEEK-V4-PRO</option>
+                                        <option value="3">DEEPSEEK-V4-FLASH</option>
+                                    </select>
+                                </div>
+                                <p className="text-xs text-muted-foreground">HELLO WORLD</p>
                             </div>
                         </div>
 
@@ -573,7 +588,7 @@ export default function StockPilotPage() {
                                         {msg.pending && (
                                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                                 <Loader2 className="h-4 w-4 animate-spin" />
-                                                Dang xu ly...
+                                                Vui lòng chờ đợi khi AI đang suy nghĩ...
                                             </div>
                                         )}
 

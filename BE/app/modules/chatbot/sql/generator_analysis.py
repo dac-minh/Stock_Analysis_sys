@@ -1,23 +1,23 @@
-from pydantic import BaseModel, Field
-from typing import Optional
-from app.modules.chatbot.llm.client import chat_completion_structured
+import json
+import re
+import ast
+from app.modules.chatbot.llm.client import chat_completion
 from app.modules.chatbot.llm.prompt_loader import load_prompt
 
-class SqlQuery(BaseModel):
-    name: str = Field(..., description="Tên query")
-    sql: str = Field(..., description="Câu lệnh SQL")
-    purpose: str = Field(..., description="Mục đích")
 
-class Citation(BaseModel):
-    source_type: str = Field(...)
-    ticker: Optional[str] = None
-    metric: Optional[str] = None
-    period: Optional[str] = None
-
-class SqlQueries(BaseModel):
-    thought: str = Field(..., description="Giải thích chiến lược")
-    queries: list[SqlQuery] = Field(default_factory=list)
-    citations: list[Citation] = Field(default_factory=list)
+def extract_json(text: str) -> dict:
+    match = re.search(r"\{.*\}", text, re.DOTALL)
+    if not match:
+        raise ValueError("LLM không trả JSON hợp lệ")
+    json_str = match.group(0)
+    try:
+        return json.loads(json_str)
+    except json.JSONDecodeError:
+        s = json_str.replace("null", "None").replace("true", "True").replace("false", "False")
+        try:
+            return ast.literal_eval(s)
+        except Exception:
+            raise ValueError(f"Không thể parse JSON: {json_str}")
 
 
 async def generate_analysis_sql(
@@ -26,7 +26,10 @@ async def generate_analysis_sql(
     rag_context: list[dict],
     ind_code_matches: list[dict],
 ) -> dict:
-    system_prompt = load_prompt("analysis_sql_agent.txt")
+    """
+    Sinh toàn bộ SQL (YoY, Peer, ...) cần thiết cho Analysis bằng 1 lượt gọi LLM duy nhất.
+    """
+    system_prompt = load_prompt("data_analyst_retriever.txt")
 
     prompt = f"""Câu hỏi user:
 {message}
@@ -40,20 +43,17 @@ BCTC ind_code candidates:
 Schema/RAG context:
 {json.dumps(rag_context, ensure_ascii=False)}
 
-Hãy sinh danh sách SQL phục vụ phân tích.
+Hãy sinh các câu lệnh SQL phục vụ phân tích.
 """
-    try:
-        response = await chat_completion_structured(
-            user_prompt=prompt,
-            system_prompt=system_prompt,
-            response_format=SqlQueries,
-            temperature=0.0,
-            max_tokens=3000,
-        )
-        return response.model_dump()
-    except Exception:
-        return {
-            "thought": "Fallback error",
-            "queries": [],
-            "citations": []
-        }
+    response = await chat_completion(
+        user_prompt=prompt,
+        system_prompt=system_prompt,
+        temperature=0.0,
+        max_tokens=3000,
+    )
+    result = extract_json(response)
+    if "citations" not in result:
+        result["citations"] = []
+    if "queries" not in result:
+        result["queries"] = []
+    return result

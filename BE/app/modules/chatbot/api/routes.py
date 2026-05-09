@@ -5,14 +5,13 @@ from fastapi import APIRouter, HTTPException
 
 from app.modules.chatbot.api.schemas import ChatRequest, ChatResponse, DataTable
 from app.modules.chatbot.router.intent_detector import detect_mode
-from app.modules.chatbot.router.entity_extractor import extract_entities
-from app.modules.chatbot.router.prompt_refiner import refine_prompt
 from app.modules.chatbot.retrieval.vector_search import vector_search
 from app.modules.chatbot.retrieval.ind_code_lookup import lookup_ind_code
 from app.modules.chatbot.sql.generator_search import generate_search_sql
 from app.modules.chatbot.sql.executor import execute_sql
 from app.modules.chatbot.sql.formatter import rows_to_markdown_table
 from app.modules.chatbot.agents.analyst_agent import run_analyst_agent
+from app.modules.chatbot.llm.client import model_choice_ctx
 
 router = APIRouter(prefix="/chat", tags=["AI Chatbot"])
 
@@ -126,6 +125,9 @@ async def ask_chatbot(req: ChatRequest):
     (6) Trả answer
     """
     trace_id = str(uuid4())
+    
+    # Set model choice for this request lifecycle
+    model_choice_ctx.set(req.model_choice)
 
     try:
         # ── Bước 2.1: Select role ─────────────────────────────────────
@@ -147,27 +149,13 @@ async def ask_chatbot(req: ChatRequest):
                 trace_id=trace_id,
             )
 
-        # ── Bước 3a: Refine prompt ────────────────────────────────────
-        refined_message = await _run(
-            "refine_prompt",
-            refine_prompt(req.message),
-            timeout=30.0 if detected_mode == "search" else None,
-        )
+        # ── Bước 3a: Fast Entity extraction ───────────────────────────
+        entities = _quick_entities(req.message)
+        metric_text = " ".join(entities.get("metrics") or []) or req.message
 
-        # ── Bước 3b: Entity extraction ────────────────────────────────
-        if detected_mode == "analysis":
-            try:
-                entities = await _run("extract_entities", extract_entities(refined_message))
-            except Exception:
-                entities = _quick_entities(refined_message)
-        else:
-            entities = _quick_entities(refined_message)
-
-        metric_text = " ".join(entities.get("metrics") or []) or refined_message
-
-        # ── Bước 3c: Fast path (search, 1 chỉ tiêu, không cần RAG) ───
+        # ── Bước 3b: Fast path (search, 1 chỉ tiêu, không cần RAG) ───
         if detected_mode == "search":
-            fast = _build_fast_search_sql(refined_message, entities)
+            fast = _build_fast_search_sql(req.message, entities)
             if fast:
                 rows = await _run("execute_fast_sql", execute_sql(fast["sql"]), timeout=12.0)
                 return ChatResponse(
@@ -179,28 +167,42 @@ async def ask_chatbot(req: ChatRequest):
                     trace_id=trace_id,
                 )
 
-        # ── Bước 3d: RAG retrieval (context + schema) ─────────────────
+        # ── Bước 3c: RAG retrieval (context + schema) ─────────────────
         schema_context, ind_code_matches = await asyncio.gather(
             _run("vector_search_metadata", vector_search(
-                query=refined_message, doc_type="metadata", top_k=3,
-            ), timeout=12.0),
-            _run("lookup_ind_code", lookup_ind_code(metric_text, top_k=3), timeout=12.0),
+                query=req.message, doc_type="metadata", top_k=3,
+            ), timeout=None),
+            _run("lookup_ind_code", lookup_ind_code(metric_text, top_k=3), timeout=None),
         )
 
-        # ── Bước 4 + 5: LLM xử lý theo mode ─────────────────────────
         if detected_mode == "search":
             # Bước 4: LLM sinh SQL search
             sql_payload = await _run(
                 "generate_search_sql",
                 generate_search_sql(
-                    message=refined_message,
+                    message=req.message,
                     entities=entities,
                     rag_context=schema_context,
                     ind_code_matches=ind_code_matches,
                 ),
-                timeout=60.0,
+                timeout=None,
             )
-            rows = await _run("execute_search_sql", execute_sql(sql_payload["sql"]), timeout=12.0)
+            
+            sql_query = sql_payload.get("sql", "").strip()
+            
+            # Xử lý trường hợp câu hỏi giao tiếp thông thường không cần query
+            if not sql_query:
+                return ChatResponse(
+                    mode_used="search",
+                    answer=sql_payload.get("thought", "Xin chào! Câu hỏi của bạn có vẻ không yêu cầu truy vấn dữ liệu tài chính. Bạn cần tôi giúp gì về phân tích cổ phiếu?"),
+                    thought_process="Không phát hiện nhu cầu truy vấn SQL.",
+                    data_tables=[],
+                    citations=[],
+                    sql_used=[],
+                    trace_id=trace_id,
+                )
+
+            rows = await _run("execute_search_sql", execute_sql(sql_query), timeout=12.0)
 
             return ChatResponse(
                 mode_used="search",
@@ -208,13 +210,13 @@ async def ask_chatbot(req: ChatRequest):
                 thought_process=sql_payload.get("thought"),
                 data_tables=[DataTable(title="Kết quả truy vấn", rows=rows)],
                 citations=sql_payload.get("citations", []),
-                sql_used=[sql_payload["sql"]],
+                sql_used=[sql_query],
                 trace_id=trace_id,
             )
 
         else:
             result = await run_analyst_agent(
-                message=refined_message,
+                message=req.message,
                 entities=entities,
                 schema_context=schema_context,
                 ind_code_matches=ind_code_matches,

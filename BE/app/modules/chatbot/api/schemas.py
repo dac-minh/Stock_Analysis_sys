@@ -6,6 +6,7 @@ class ChatRequest(BaseModel):
     session_id: str | None = None
     message: str
     mode: Literal["auto", "search", "analysis"] = "auto"
+    model_choice: str = "1"
     context: dict[str, Any] = Field(default_factory=dict)
 
 
