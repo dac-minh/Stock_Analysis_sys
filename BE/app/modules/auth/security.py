@@ -1,5 +1,5 @@
 """Security utilities — password hashing and JWT token management."""
-
+import hashlib
 from datetime import datetime, timedelta, timezone
 
 from jose import JWTError, jwt
@@ -15,13 +15,17 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def hash_password(password: str) -> str:
-    """Hash a plain-text password using bcrypt."""
-    return pwd_context.hash(password)
+    """Hash a plain-text password using SHA-256 then bcrypt."""
+    # Bước 1: Hash SHA-256 để đưa mật khẩu về chuỗi 64 ký tự cố định (luôn < 72 bytes)
+    pre_hashed = hashlib.sha256(password.encode()).hexdigest()
+    # Bước 2: Hash bằng bcrypt
+    return pwd_context.hash(pre_hashed)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a plain-text password against a bcrypt hash."""
-    return pwd_context.verify(plain_password, hashed_password)
+    """Verify a plain-text password against a pre-hashed bcrypt hash."""
+    pre_hashed = hashlib.sha256(plain_password.encode()).hexdigest()
+    return pwd_context.verify(pre_hashed, hashed_password)
 
 
 # ── JWT tokens ─────────────────────────────────────────────────────
