@@ -32,8 +32,12 @@ _db_host = (urlparse(_db_url).hostname or "").lower()
 _is_local_db = _db_host in {"localhost", "127.0.0.1"}
 
 _connect_args = {
-    "statement_cache_size": 100,  # cache 100 prepared statements / conn
-    "command_timeout": 20,  # abort query sau 20s
+    "statement_cache_size": 100,
+    "command_timeout": 20,
+    # Tự động set search_path cho mọi kết nối của asyncpg
+    "server_settings": {
+        "search_path": "hethong_phantich_chungkhoan,system,public"
+    }
 }
 if _is_local_db:
     _connect_args["ssl"] = False

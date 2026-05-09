@@ -143,6 +143,10 @@ async def authenticate_user(
         return "google_account"  # Tài khoản Google, không có password
 
     if not verify_password(password, user.hashed_password):
+        # Ghi log thất bại trước khi return để debug dễ hơn
+        from app.modules.tracking.logic import track_login as _track_login
+        await _track_login(db, user_id=user.id, method="local", success=False,
+                           ip_address=ip_address, device_info=device_info)
         return "invalid_credentials"
 
     if not user.is_active:

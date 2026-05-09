@@ -54,7 +54,7 @@ class Settings(BaseSettings):
     LM_STUDIO_EMBED_MODEL: str = "text-embedding-bge-m3"
 
     # OpenAI settings
-    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY")
+    OPENAI_API_KEY: str = ""
     OPENAI_MODEL: str = "gpt-5.4-mini"
     OPENAI_FINETUNED_MODEL: str | None = None
 
